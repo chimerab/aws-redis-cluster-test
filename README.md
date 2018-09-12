@@ -2,6 +2,14 @@
 
 This project is a test over the AWS redis cluster to verify its performance, scalability and resilience.
 
+## Testing failover locally
+
+The project contains a test called `TestRedis`. This test starts an in-memory redis cluster and runs the test simulation.
+
+After `n` seconds in the simulation one of the master node is stopped.
+
+The test shows the redis client is not able to recover to a `master-failover` scenario.
+
 ## How to build
 
 The project use the maven to build the project.
