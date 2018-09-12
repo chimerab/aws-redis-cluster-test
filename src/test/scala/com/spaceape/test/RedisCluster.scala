@@ -48,7 +48,7 @@ class RedisCluster(numberOfShards: Int, numOfReplicates: Int) {
       serverA.meet(serverB)
     }
     logger.info("wait until the cluster is active ...")
-    val result = waitUntilClusterIsActive(masters.head, maxNumberOfRetries = 3)
+    val result = waitUntilClusterIsActive(masters.head, maxNumberOfRetries = 5)
     if (result) {
       logger.info("cluster is active")
       logger.info("add slaves as replication of the masters")
