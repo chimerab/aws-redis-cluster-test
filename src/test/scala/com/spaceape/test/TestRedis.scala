@@ -34,7 +34,7 @@ class TestRedis extends FeatureSpec with BeforeAndAfterAll {
       operationInterval = 100.millis,
       host = host,
       port = port,
-      useJedis = true,
+      useJedis = false,
       lettuceAutoReconnect = true
     )
     runner.run()
