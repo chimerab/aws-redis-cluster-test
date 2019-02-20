@@ -24,6 +24,6 @@ case class CallerContext(operation: Int,
 
   def incrementSuccess(entry: Option[RedisEntry]): CallerContext = copy(operation = operation - 1, successes = successes + 1, entry = entry)
 
-  def incrementFailure(message: String): CallerContext = copy(operation = operation - 1, failures = failures + 1, failureMessages = message :: failureMessages)
+  def incrementFailure(message: String): CallerContext = copy(operation = operation - 1, failures = failures + 1, failureMessages = message :: failureMessages, entry = None)
 
 }

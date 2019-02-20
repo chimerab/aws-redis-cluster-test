@@ -8,7 +8,7 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 
 package object test {
 
-  type Commands = RedisAdvancedClusterAsyncCommands[String,String]
+  type LettuceCommands = RedisAdvancedClusterAsyncCommands[String,String]
 
   implicit class RedisFutureToFuture[T](redisFuture: CompletionStage[T]) {
 

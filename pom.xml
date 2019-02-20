@@ -14,7 +14,7 @@
         <scalalib.version>2.12.4</scalalib.version>
         <scalatest.version>3.0.3</scalatest.version>
         <slf4j.version>1.7.25</slf4j.version>
-        <lettuce.version>5.0.4.RELEASE</lettuce.version>
+        <lettuce.version>5.1.4.RELEASE</lettuce.version>
 
         <tdigest.version>3.1</tdigest.version>
     </properties>
@@ -33,11 +33,6 @@
             <version>${scalalib.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.ajbrown.dropwizard</groupId>
-            <artifactId>dropwizard-ssm</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-sts</artifactId>
             <version>1.11.313</version>
@@ -51,6 +46,11 @@
             <groupId>io.lettuce</groupId>
             <artifactId>lettuce-core</artifactId>
             <version>${lettuce.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>2.9.0</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>

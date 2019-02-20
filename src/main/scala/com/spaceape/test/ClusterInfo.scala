@@ -1,25 +1,24 @@
 package com.spaceape.test
 
-import io.lettuce.core.cluster.RedisClusterClient
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext
 
-class ClusterInfo(client: RedisClusterClient)(implicit executionContext: ExecutionContext) {
+class ClusterInfo(client: Client)(implicit executionContext: ExecutionContext) {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
-  private val commands = client.connect().async()
+  private val commands = client.connect().commands()
 
   def logStatus(): Unit = {
-    commands.clusterNodes()
-      .asFuture
-      .map(_.split("\n").toList)
-      .map( _.map(_.split(" ", 5) match {
-        case Array(id, hostname, flags, master, _) => Node(id, hostname, flags, master)
-      }))
-      .map(convert)
-      .foreach(logger.info)
+    commands.clusterNodes().foreach { nodes =>
+      nodes.map(_.split("\n").toList)
+        .map(_.map(_.split(" ", 5) match {
+          case Array(id, hostname, flags, master, _) => Node(id, hostname, flags, master)
+        }))
+        .map(convert)
+        .foreach(logger.info)
+    }
   }
 
   case class Node(id: String, hostname: String, flags: String, master: String, slaves: List[Node] = Nil) {
@@ -30,8 +29,9 @@ class ClusterInfo(client: RedisClusterClient)(implicit executionContext: Executi
     val maybeFail: Boolean = flags.contains("fail?")
     val status: String = if (fail && maybeFail) "FAILING" else if (fail) "FAIL" else "OK"
     val shortId: String = id.take(3)
+    val port: String = hostname.split(":")(1)
 
-    def asString: String = s"master-$shortId[$status][${slaves.size}]"
+    def asString: String = s"M[$shortId][$port][$status][${slaves.size}]"
 
   }
 
@@ -41,6 +41,7 @@ class ClusterInfo(client: RedisClusterClient)(implicit executionContext: Executi
       val master = nodes.find(_.id == masterId).get
       master.copy(slaves = shard.filter(_.isSlave))
     }.toList
+      .sortBy(_.id)
       .map(_.asString)
       .mkString(", ")
   }
