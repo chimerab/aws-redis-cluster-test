@@ -30,7 +30,8 @@ class Runner(numberOfCallers: Int,
              operationInterval: Duration,
              host: String,
              port: Int = 6379,
-             useJedis: Boolean = false) {
+             useJedis: Boolean = false,
+             lettuceAutoReconnect: Boolean = false) {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
@@ -39,7 +40,7 @@ class Runner(numberOfCallers: Int,
     val config = CallerConfig(numberOfCallers, duration, operationInterval)
     implicit val ec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(config.numberOfCallers + 1))
 
-    val client = if (useJedis) Client.jedis(host, port) else Client.lettuce(host, port)
+    val client = if (useJedis) Client.jedis(host, port) else Client.lettuce(host, port, autoReconnect = lettuceAutoReconnect)
 
     logger.info("start scheduler to log cluster info")
     val scheduler = Executors.newScheduledThreadPool(1)

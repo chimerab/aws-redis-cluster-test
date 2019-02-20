@@ -80,7 +80,7 @@ object Client {
 
   private val refreshTopologyInterval = 10
 
-  def lettuce(host: String, port: Int = 6379)(implicit executionContext: ExecutionContext): Client = {
+  def lettuce(host: String, port: Int = 6379, autoReconnect: Boolean = true)(implicit executionContext: ExecutionContext): Client = {
     logger.info(s"create LETTUCE redis cluster connecting to [$host:$port] and topology refresh every [$refreshTopologyInterval] seconds")
     val client = RedisClusterClient.create(s"redis://$host:$port")
     // Set topology
@@ -90,7 +90,7 @@ object Client {
       .build()
     client.setOptions(ClusterClientOptions.builder()
       .topologyRefreshOptions(topologyRefreshOptions)
-      .autoReconnect(false) // default value
+      .autoReconnect(autoReconnect) // default value
       .build())
     () => lettuceConnection(client.connect())
   }
