@@ -1,6 +1,9 @@
 package com.spaceape.test
 
+import java.time.Duration
+
 import com.spaceape.test.Client.Connection
+import io.lettuce.core.TimeoutOptions
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.lettuce.core.cluster.models.partitions.RedisClusterNode
 import io.lettuce.core.cluster.{ClusterClientOptions, ClusterTopologyRefreshOptions, RedisClusterClient, StatefulRedisClusterConnectionImpl}
@@ -80,7 +83,7 @@ object Client {
 
   private val refreshTopologyInterval = 10
 
-  def lettuce(host: String, port: Int = 6379, autoReconnect: Boolean = true)(implicit executionContext: ExecutionContext): Client = {
+  def lettuce(host: String, port: Int = 6379, autoReconnect: Boolean = true, commandTimeout: Duration = Duration.ofMinutes(2))(implicit executionContext: ExecutionContext): Client = {
     logger.info(s"create LETTUCE redis cluster connecting to [$host:$port] and topology refresh every [$refreshTopologyInterval] seconds")
     val client = RedisClusterClient.create(s"redis://$host:$port")
     // Set topology
@@ -88,9 +91,15 @@ object Client {
       .enablePeriodicRefresh(java.time.Duration.ofSeconds(refreshTopologyInterval))
       .enableAllAdaptiveRefreshTriggers()
       .build()
+    // Set timeouts
+    val timeoutOptions = TimeoutOptions.builder()
+      .timeoutCommands(true)
+      .fixedTimeout(commandTimeout)
+      .build()
     client.setOptions(ClusterClientOptions.builder()
       .topologyRefreshOptions(topologyRefreshOptions)
-      .autoReconnect(autoReconnect) // default value
+      .timeoutOptions(timeoutOptions)
+      .autoReconnect(autoReconnect)
       .build())
     () => lettuceConnection(client.connect())
   }

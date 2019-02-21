@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Try
+import java.time.{Duration => JDuration}
 
 object Runner extends App {
 
@@ -31,7 +32,8 @@ class Runner(numberOfCallers: Int,
              host: String,
              port: Int = 6379,
              useJedis: Boolean = false,
-             lettuceAutoReconnect: Boolean = false) {
+             lettuceAutoReconnect: Boolean = false,
+             commandTimeout: JDuration = JDuration.ofMinutes(2)) {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
@@ -40,7 +42,7 @@ class Runner(numberOfCallers: Int,
     val config = CallerConfig(numberOfCallers, duration, operationInterval)
     implicit val ec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(config.numberOfCallers + 1))
 
-    val client = if (useJedis) Client.jedis(host, port) else Client.lettuce(host, port, autoReconnect = lettuceAutoReconnect)
+    val client = if (useJedis) Client.jedis(host, port) else Client.lettuce(host, port, autoReconnect = lettuceAutoReconnect, commandTimeout = commandTimeout)
 
     logger.info("start scheduler to log cluster info")
     val scheduler = Executors.newScheduledThreadPool(1)
@@ -57,11 +59,11 @@ class Runner(numberOfCallers: Int,
       val result = Await.result(Future.sequence(results), config.duration * 10)
 
       logger.info(s"results")
-      logger.info("successes " + result.map(_.successes).sum)
-      logger.info("failures " + result.map(_.failures).sum)
-      logger.info("failure messages: " + result.flatMap(_.failureMessages).distinct.mkString(", "))
-      logger.info("max failure period: " + result.map(_.failures).sum * operationInterval)
-      logger.info("average failure period: " + result.map(_.failures).sum / numberOfCallers * operationInterval)
+      logger.info("successes " + result.map(_.successes.get()).sum)
+      logger.info("failures " + result.map(_.failures.get()).sum)
+      logger.info("failure messages: " + result.flatMap(_.failureMessages.get()).distinct.mkString(", "))
+      logger.info("max failure period: " + result.map(_.failures.get()).sum * operationInterval)
+      logger.info("average failure period: " + result.map(_.failures.get()).sum / numberOfCallers * operationInterval)
 
       logger.info(s"performance")
       val digest = CallerContext.createDigest()
@@ -71,7 +73,6 @@ class Runner(numberOfCallers: Int,
       logger.info("performance (99 percentile): " + digest.quantile(0.99))
       logger.info("performance (99.99 percentile): " + digest.quantile(0.9999))
     } finally {
-
       logger.info(s"stop callers and schedule")
       callers.foreach(_.stop())
       schedule.cancel(true)
